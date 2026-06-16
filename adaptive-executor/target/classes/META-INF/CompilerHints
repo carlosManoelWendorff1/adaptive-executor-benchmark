@@ -1,0 +1,11 @@
+dontinline,*.*_all_jmhStub
+dontinline,*.*_avgt_jmhStub
+dontinline,*.*_sample_jmhStub
+dontinline,*.*_ss_jmhStub
+dontinline,*.*_thrpt_jmhStub
+inline,com/cmw/adaptive/benchmark/SequentialBenchmark.cleanup
+inline,com/cmw/adaptive/benchmark/SequentialBenchmark.execute
+inline,com/cmw/adaptive/benchmark/SequentialBenchmark.setup
+inline,com/cmw/adaptive/benchmark/TraditionalBenchmark.cleanup
+inline,com/cmw/adaptive/benchmark/TraditionalBenchmark.execute
+inline,com/cmw/adaptive/benchmark/TraditionalBenchmark.setup

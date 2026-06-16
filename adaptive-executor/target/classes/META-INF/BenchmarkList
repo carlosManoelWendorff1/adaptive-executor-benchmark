@@ -1,0 +1,2 @@
+JMH S 46 com.cmw.adaptive.benchmark.SequentialBenchmark S 76 com.cmw.adaptive.benchmark.jmh_generated.SequentialBenchmark_execute_jmhTest S 7 execute S 10 Throughput E A 1 1 1 E E E E E E E E E E E E E E U 7 SECONDS E E 
+JMH S 47 com.cmw.adaptive.benchmark.TraditionalBenchmark S 77 com.cmw.adaptive.benchmark.jmh_generated.TraditionalBenchmark_execute_jmhTest S 7 execute S 10 Throughput E A 1 1 1 E E E E E E E E E E E E E M 1 7 workers 4 8 yAA===== 8 0AA===== 8 4AA===== 8 xAgNAA== U 7 SECONDS E E 
