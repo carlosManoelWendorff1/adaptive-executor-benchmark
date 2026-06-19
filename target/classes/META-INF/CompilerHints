@@ -1,0 +1,14 @@
+dontinline,*.*_all_jmhStub
+dontinline,*.*_avgt_jmhStub
+dontinline,*.*_sample_jmhStub
+dontinline,*.*_ss_jmhStub
+dontinline,*.*_thrpt_jmhStub
+inline,com/cmw/adaptiveBenchmark/benchmark/AdaptiveBenchmark.execute
+inline,com/cmw/adaptiveBenchmark/benchmark/AdaptiveBenchmark.setup
+inline,com/cmw/adaptiveBenchmark/benchmark/AdaptiveBenchmark.teardown
+inline,com/cmw/adaptiveBenchmark/benchmark/SequentialBenchmark.cleanup
+inline,com/cmw/adaptiveBenchmark/benchmark/SequentialBenchmark.execute
+inline,com/cmw/adaptiveBenchmark/benchmark/SequentialBenchmark.setup
+inline,com/cmw/adaptiveBenchmark/benchmark/TraditionalBenchmark.cleanup
+inline,com/cmw/adaptiveBenchmark/benchmark/TraditionalBenchmark.execute
+inline,com/cmw/adaptiveBenchmark/benchmark/TraditionalBenchmark.setup
