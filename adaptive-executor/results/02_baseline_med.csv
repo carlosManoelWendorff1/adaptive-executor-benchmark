@@ -1,0 +1,7 @@
+"Benchmark","Mode","Threads","Samples","Score","Score Error (99,9%)","Unit","Param: workers"
+"com.cmw.adaptiveBenchmark.benchmark.AdaptiveBenchmark.execute","thrpt",1,10,"0,229370","0,005594","ops/s",
+"com.cmw.adaptiveBenchmark.benchmark.SequentialBenchmark.execute","thrpt",1,10,"0,021123","0,000259","ops/s",
+"com.cmw.adaptiveBenchmark.benchmark.TraditionalBenchmark.execute","thrpt",1,10,"0,040976","0,000484","ops/s",2
+"com.cmw.adaptiveBenchmark.benchmark.TraditionalBenchmark.execute","thrpt",1,10,"0,078432","0,001535","ops/s",4
+"com.cmw.adaptiveBenchmark.benchmark.TraditionalBenchmark.execute","thrpt",1,10,"0,162170","0,025164","ops/s",8
+"com.cmw.adaptiveBenchmark.benchmark.TraditionalBenchmark.execute","thrpt",1,10,"0,234406","0,006322","ops/s",16

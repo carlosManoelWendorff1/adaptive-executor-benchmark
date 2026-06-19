@@ -1,199 +1,216 @@
 # Adaptive Executor Benchmark
 
-## Overview
+Benchmark project for evaluating adaptive thread pool execution strategies using [JMH (Java Microbenchmark Harness)](https://github.com/openjdk/jmh).
 
-This project evaluates different task execution strategies using Java and JMH (Java Microbenchmark Harness).
-
-The goal is to compare the performance of multiple executor implementations under different workloads and system conditions.
-
-Currently available executors:
-
-- Sequential Executor
-- Traditional Thread Pool Executor
-
-Future implementations may include:
-
-- Adaptive Executor
-- Priority-based Executor
-- Work-stealing Executor
+The goal is to compare throughput and scalability of multiple executor implementations under different workloads and CPU contention conditions, simulating real-world noisy neighbour scenarios common in shared infrastructure environments.
 
 ---
 
-## Project Structure
+## Executors
 
-### Workloads
+### Sequential Executor
 
-The benchmark simulates two different workload types:
+Executes all tasks sequentially in a single thread. Used as the baseline for speedup calculations.
 
-#### Payment Tasks
+### Traditional Executor
 
-Represents I/O-bound operations.
+Fixed-size thread pool using `Executors.newFixedThreadPool(n)`. Benchmarked with `workers = {2, 4, 8, 16}` to evaluate how throughput scales with thread count.
 
-Simulation:
+### Adaptive Executor
 
-```text
-Thread.sleep(...)
-```
+Dynamic thread pool backed by a priority queue and a PID-based scaling strategy. Workers are created and destroyed at runtime based on queue size, CPU load, and throughput feedback. Tasks are scheduled by priority — `HIGH` tasks are always processed before `LOW` tasks.
 
-Configured through:
+Key components:
+
+| Component            | Description                                                       |
+| -------------------- | ----------------------------------------------------------------- |
+| `PriorityTaskQueue`  | `PriorityBlockingQueue`-backed queue ordered by task priority     |
+| `ScalingManager`     | Background thread that evaluates scaling decisions every 200ms    |
+| `PidScalingStrategy` | PID controller that computes desired worker count from queue size |
+| `ExecutorMetrics`    | Lock-free metrics via `AtomicLong`/`AtomicInteger`                |
+
+---
+
+## Workloads
+
+### Payment Task (`HIGH` priority)
+
+Simulates I/O-bound work such as payment processing with network latency.
 
 ```properties
 payment.sleep.ms=10
+workload.payments=100
 ```
 
----
+### Analytics Task (`LOW` priority)
 
-#### Analytics Tasks
-
-Represents CPU-bound operations.
-
-Simulation:
-
-```text
-Mathematical calculations executed in a loop
-```
-
-Configured through:
+Simulates CPU-bound work such as data aggregation with heavy computation.
 
 ```properties
-analytics.iterations=1000000
+analytics.iterations=100000000
+workload.analytics=100
+```
+
+### Burst Task (`HIGH` priority)
+
+Simulates irregular CPU spikes — alternates between compute bursts and short pauses. Designed to stress the adaptive scaler's reaction time.
+
+```properties
+workload.bursts=50
+burst.iterations=5000000
+burst.pause.ms=5
+burst.count=3
 ```
 
 ---
 
-### Noise Generator
+## Noise Generator
 
-An optional CPU noise generator can be enabled to simulate a busy machine.
-
-Configuration:
+Simulates CPU contention from co-located workloads (noisy neighbour effect). Background threads spin continuously during benchmark execution.
 
 ```properties
 noise.enabled=true
-noise.threads=8
+noise.threads=4
 ```
-
-When enabled, background threads continuously consume CPU resources during benchmark execution.
 
 ---
 
 ## Configuration
 
-Benchmark workloads are configured in:
+All benchmark parameters are defined in:
 
-```text
+```
 src/main/resources/application.properties
 ```
 
-Example:
+Full example:
 
 ```properties
 # Workloads
-workload.payments=2
-workload.analytics=2
+workload.payments=50
+workload.analytics=50
+workload.bursts=50
 
-# Analytics simulation
-analytics.iterations=1000000
-
-# Payment simulation
+# Payment simulation (I/O-bound)
 payment.sleep.ms=10
 
-# Noise
-noise.enabled=true
-noise.threads=8
+# Analytics simulation (CPU-bound)
+analytics.iterations=100000000
+
+# Burst simulation (irregular CPU spikes)
+burst.iterations=5000000
+burst.pause.ms=5
+burst.count=3
+
+# Traditional executor worker configurations
+executor.workers=2,4,8,16
+
+# Noise (noisy neighbour simulation)
+noise.enabled=false
+noise.threads=4
 ```
 
 ---
 
 ## Building
 
-Generate the benchmark JAR:
-
 ```bash
 mvn clean package
 ```
 
-Output:
+Output: `target/benchmarks.jar`
 
-```text
-target/benchmarks.jar
-```
+> **Note:** The `application.properties` file is packaged inside the JAR. Any configuration change requires rebuilding.
 
 ---
 
-## Running Benchmarks
+## Running
 
-Run all benchmarks:
+### Single run
 
 ```bash
-java -jar target/benchmarks.jar ".*Benchmark.*"
+java -jar target/benchmarks.jar ".*Benchmark.*" -rf csv -rff results.csv -wi 3 -i 5 -f 2
 ```
 
----
+### JMH parameters
 
-### Recommended Execution
+| Parameter | Description            | Recommended       |
+| --------- | ---------------------- | ----------------- |
+| `-wi`     | Warmup iterations      | `3`               |
+| `-i`      | Measurement iterations | `5`               |
+| `-f`      | Fork count             | `2`               |
+| `-rf`     | Result format          | `csv`             |
+| `-rff`    | Output file            | `results/exp.csv` |
 
-Generate CSV results:
-
-```bash
-java -jar target/benchmarks.jar ".*Benchmark.*" -rf csv -rff results.csv -wi 1 -i 10 -f 1
-```
-
-Parameters:
-
-| Parameter | Description            |
-| --------- | ---------------------- |
-| -wi       | Warmup iterations      |
-| -i        | Measurement iterations |
-| -f        | Fork count             |
-| -rf       | Result format          |
-| -rff      | Output file            |
-
----
-
-### Running a Single Benchmark
-
-Sequential executor:
+### Single benchmark
 
 ```bash
+java -jar target/benchmarks.jar AdaptiveBenchmark
+java -jar target/benchmarks.jar TraditionalBenchmark
 java -jar target/benchmarks.jar SequentialBenchmark
 ```
 
-Traditional executor:
+---
 
-```bash
-java -jar target/benchmarks.jar TraditionalBenchmark
+## Automated Experiment Suite
+
+The project includes a PowerShell script that runs all 10 planned experiments automatically, updating `application.properties` and recompiling before each run.
+
+```powershell
+.\run_experiments.ps1
 ```
+
+Results are saved to `results/` with one CSV per experiment:
+
+| File                   | Scenario                          |
+| ---------------------- | --------------------------------- |
+| `01_baseline_low.csv`  | Low load, no noise                |
+| `02_baseline_med.csv`  | Medium load, no noise             |
+| `03_baseline_high.csv` | High load, no noise               |
+| `04_burst_low.csv`     | Light burst mix, no noise         |
+| `05_burst_high.csv`    | Heavy burst, no noise             |
+| `06_noise2_low.csv`    | Light noise (2 threads)           |
+| `07_noise2_burst.csv`  | Light noise + burst               |
+| `08_noise4_low.csv`    | Heavy noise (4 threads)           |
+| `09_noise4_burst.csv`  | Heavy noise + burst               |
+| `10_noise8_burst.csv`  | Extreme noise (8 threads) + burst |
 
 ---
 
-## Output
+## Result Visualization
 
-Example CSV:
+Requires Python 3.12+ with `pandas`, `matplotlib`, and `numpy`.
 
-```csv
-Benchmark,Mode,Score,Unit
-SequentialBenchmark.execute,thrpt,32.91,ops/s
-TraditionalBenchmark.execute,thrpt,92.84,ops/s
+```bash
+pip install pandas matplotlib numpy
+python generate_charts.py
 ```
 
-Higher throughput values indicate better performance.
+Charts are saved to `charts/`:
+
+| File                               | Description                                                |
+| ---------------------------------- | ---------------------------------------------------------- |
+| `01_throughput_per_experiment.png` | Grouped bar chart — throughput per executor per experiment |
+| `02_adaptive_vs_traditional16.png` | Adaptive vs Traditional w=16 across all scenarios          |
+| `03_noise_degradation.png`         | Throughput degradation curve under increasing noise        |
+| `04_speedup_over_sequential.png`   | Speedup of each executor relative to sequential baseline   |
+| `05_speedup_linear.png`            | Speedup vs linear ideal — one subplot per experiment       |
+| `summary.csv`                      | Consolidated results with adaptive vs best traditional (%) |
+
+---
+
+## Interpreting Results
+
+- **Speedup** is computed relative to the `SequentialBenchmark` baseline.
+- **Linear ideal** represents perfect parallelism — speedup equal to worker count.
+- The adaptive executor's speedup appears as a horizontal line in chart 05, showing the equivalent number of fixed workers it autonomously matched.
+- `adaptive_vs_best_%` in `summary.csv` shows how the adaptive executor compares to `Traditional w=16`: negative means it underperformed, positive means it outperformed.
 
 ---
 
 ## Notes
 
-- JMH performs warmup iterations before measurements.
-- Benchmark execution time depends on workload configuration.
-- Results may vary depending on hardware, JVM version, operating system, and background CPU activity.
-- For meaningful comparisons, use the same workload configuration across all executor implementations.
-
----
-
-## Future Work
-
-- Adaptive Executor implementation
-- Dynamic worker scaling
-- Priority scheduling
-- Additional workload types
-- Automated result visualization
-- Statistical comparison of benchmark runs
+- Results vary with hardware, JVM version, OS scheduler, and background activity.
+- Always use the same `application.properties` when comparing executors.
+- The adaptive executor includes a ~200ms scaling reaction delay — this slightly penalizes it on short workloads where fixed pools are immediately ready.
+- CPU load awareness (`OperatingSystemMXBean`) moderates scale-up under saturation instead of blocking it, preserving throughput under noisy neighbour conditions.

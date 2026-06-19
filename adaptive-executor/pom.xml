@@ -6,18 +6,18 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.cmw</groupId>
-    <artifactId>adaptive-executor</artifactId>
+    <artifactId>adaptive-executor-benchmark</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <packaging>jar</packaging>
 
-    <name>adaptive-executor</name>
+    <name>adaptive-executor-benchmark</name>
 
     <properties>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <maven.compiler.release>25</maven.compiler.release>
+        <maven.compiler.release>21</maven.compiler.release>
 
         <junit.version>5.13.4</junit.version>
         <jmh.version>1.37</jmh.version>
@@ -48,6 +48,12 @@
             <artifactId>jmh-generator-annprocess</artifactId>
             <version>${jmh.version}</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+           <groupId>com.cmw.adaptive</groupId>
+            <artifactId>adaptive-executor</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
 
     </dependencies>
