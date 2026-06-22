@@ -1,6 +1,6 @@
 # Adaptive Executor Benchmark
 
-Benchmark project for evaluating adaptive thread pool execution strategies using [JMH (Java Microbenchmark Harness)](https://github.com/openjdk/jmh).
+Benchmark project for evaluating [adaptive thread pool execution](https://github.com/carlosManoelWendorff1/adaptive-executor) strategies using [JMH (Java Microbenchmark Harness)](https://github.com/openjdk/jmh).
 
 The goal is to compare throughput, scalability, and resilience under CPU contention between traditional fixed thread pools and an adaptive executor capable of dynamically scaling workers based on workload conditions.
 
